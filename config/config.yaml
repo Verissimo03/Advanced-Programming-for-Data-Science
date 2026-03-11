@@ -1,0 +1,18 @@
+model:
+  name: qwen3.5:4b
+  temperature: 0.2
+
+embedding:
+  model: nomic-embed-text
+
+chunking:
+  chunk_size: 500
+  chunk_overlap: 50
+
+vector_store:
+  path: data/vector_store
+
+prompts:
+  system: |
+    You are an assistant that answers questions using the provided context.
+    If the answer is not in the context, say you don't know.
