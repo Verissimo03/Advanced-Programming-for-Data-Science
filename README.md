@@ -26,9 +26,13 @@ User Query -> Embedding generation -> Vector retrieval -> Context injection -> L
 ## Project Structure
 
 data/ # Raw and processed documents
+
 src/ # Core system modules
+
 config/ # Configuration files
+
 frontend/ # Streamlit interface
+
 tests/ # Unit tests
 
 
