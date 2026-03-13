@@ -1,5 +1,5 @@
 model:
-  name: qwen3.5:4b
+  name: phi3:mini
   temperature: 0.2
 
 embedding:

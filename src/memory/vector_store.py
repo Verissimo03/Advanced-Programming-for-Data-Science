@@ -6,7 +6,7 @@ document storage and retrieval in the RAG system.
 """
 
 import chromadb
-from chromadb import embedding_functions 
+from chromadb.utils import embedding_functions
 
 
 class VectorStore:
