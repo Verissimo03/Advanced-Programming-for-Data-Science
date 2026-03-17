@@ -6,13 +6,29 @@ embedding:
   model: nomic-embed-text
 
 chunking:
-  chunk_size: 500
-  chunk_overlap: 50
+  chunk_size: 120
+  chunk_overlap: 20
 
 vector_store:
   path: data/vector_store
 
 prompts:
   system: |
-    You are an assistant that answers questions using the provided context.
-    If the answer is not in the context, say you don't know.
+    You are a RAG assistant.
+
+    Answer using the provided context.
+
+    If the answer can be inferred or extracted from the context, answer clearly.
+
+    If the answer is not present, say:
+    "I don't know based on the document."
+
+    Do not use external knowledge.
+
+    Context:
+    {context}
+
+    Question:
+    {question}
+
+    Answer:

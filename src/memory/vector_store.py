@@ -58,11 +58,16 @@ class VectorStore:
             Unique identifiers for each chunk.
         """
 
+        # overwrite existing documents with same ids
+        try:
+            self.collection.delete(ids=ids)
+        except:
+            pass
+
         self.collection.add(
             documents=documents,
             ids=ids
         )
-
     def query(self, query_text: str, n_results: int = 3):
         """
         Retrieve relevant documents from the vector store.
@@ -77,14 +82,20 @@ class VectorStore:
 
         Returns
         -------
-        dict
-            Retrieved documents and metadata.
+        list[str]
+            List of retrieved document chunks.
         """
+
+        query_text = query_text.lower()
 
         results = self.collection.query(
             query_texts=[query_text],
             n_results=n_results
         )
 
-        return results
-    
+        documents = results.get("documents", [])
+
+        if not documents or not documents[0]:
+            return []
+
+        return documents[0]  # return list[str]

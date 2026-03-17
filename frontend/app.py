@@ -11,6 +11,7 @@ Features
 
 import sys
 import os
+import json
 
 # Allow Streamlit to access the src folder
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -22,6 +23,25 @@ from src.utils.chunker import TextChunker
 from src.memory.vector_store import VectorStore
 from src.models.llm import LLM
 from src.memory.conversation_history import ConversationHistory
+from src.utils.config_loader import load_config
+
+
+# -----------------------------
+# Load configuration
+# -----------------------------
+config = load_config()
+
+MODEL_NAME = config["model"]["name"]
+TEMPERATURE = config["model"]["temperature"]
+
+EMBEDDING_MODEL = config["embedding"]["model"]
+
+CHUNK_SIZE = config["chunking"]["chunk_size"]
+CHUNK_OVERLAP = config["chunking"]["chunk_overlap"]
+
+VECTOR_STORE_PATH = config["vector_store"]["path"]
+
+SYSTEM_PROMPT = config["prompts"]["system"]
 
 
 # -----------------------------
@@ -53,23 +73,23 @@ Upload a document and ask questions about its content using a local AI model.
 loader = DocumentLoader()
 
 chunker = TextChunker(
-    chunk_size=150,
-    chunk_overlap=20
+    chunk_size=CHUNK_SIZE,
+    chunk_overlap=CHUNK_OVERLAP
 )
 
-# Use session_state to avoid DB issues
+# Use session_state to avoid DB reinitialization
 if "vector_store" not in st.session_state:
     st.session_state.vector_store = VectorStore(
-        persist_directory="data/vector_store",
-        embedding_model="nomic-embed-text"
+        persist_directory=VECTOR_STORE_PATH,
+        embedding_model=EMBEDDING_MODEL
     )
 
 vector_store = st.session_state.vector_store
 
 
 llm = LLM(
-    model_name="phi3:mini",
-    system_prompt="You are an assistant that analyzes documents. The user uploaded a document. The following text chunks come from that document. Use this context to answer the question. You may summarize, analyze, or comment on the content. If the answer is not contained in the context, say you don't know. Context: {context} Question:{question}Answer:"
+    model_name=MODEL_NAME,
+    system_prompt=SYSTEM_PROMPT
 )
 
 history_manager = ConversationHistory()
@@ -91,20 +111,70 @@ with st.sidebar:
 
     st.title("⚙️ System")
 
-    st.write("Model: phi3:mini")
-    st.write("Embedding: nomic-embed-text")
+    st.write(f"Model: {MODEL_NAME}")
+    st.write(f"Embedding: {EMBEDDING_MODEL}")
     st.write("Vector DB: ChromaDB")
 
     st.markdown("---")
+
+    # -----------------------------
+    # Chat selection
+    # -----------------------------
+    history_manager = ConversationHistory()
+
+    chat_ids = history_manager.get_chat_ids()
+
+    if not chat_ids:
+        chat_ids = ["chat_1"]
+        history_manager.create_new_chat()
+
+    selected_chat = st.selectbox("💬 Select conversation", chat_ids)
+
+    # Create new chat
+    if st.button("➕ New Chat"):
+        new_chat = history_manager.create_new_chat()
+        st.session_state.chat_id = new_chat
+        st.rerun()
+
+    # Store selected chat
+    st.session_state.chat_id = selected_chat
     
-    # -----------------------------
     # Clear conversation
-    # -----------------------------
-    if st.button("Clear Conversation"):
+    if st.button("Clear Current Chat"):
 
-        open("data/chat_history.json", "w").write("[]")
+        chat_id = st.session_state.chat_id
 
-        st.success("Conversation cleared")
+        with open("data/chat_history.json", "r") as f:
+            data = json.load(f)
+
+        # If file was corrupted (old format), fix it
+        if isinstance(data, list):
+            data = {}
+
+        # Clear ONLY current chat
+        data[chat_id] = []
+
+        with open("data/chat_history.json", "w") as f:
+            json.dump(data, f, indent=2)
+
+        st.success(f"{chat_id} cleared")
+        st.rerun()
+        
+    if st.button("🗑 Delete Chat"):
+
+        chat_id = st.session_state.chat_id
+
+        with open("data/chat_history.json", "r") as f:
+            data = json.load(f)
+
+        if chat_id in data:
+            del data[chat_id]
+
+        with open("data/chat_history.json", "w") as f:
+            json.dump(data, f, indent=2)
+
+        st.success(f"{chat_id} deleted")
+        st.rerun()
 
 
 # -----------------------------
@@ -112,7 +182,6 @@ with st.sidebar:
 # -----------------------------
 if uploaded_file:
 
-    # Prevent re-processing same file
     if "last_file" not in st.session_state:
         st.session_state.last_file = None
 
@@ -131,9 +200,6 @@ if uploaded_file:
 
             chunks = chunker.split(text)
 
-            # Prevent re-processing same file
-            vector_store.reset()
-
             ids = [f"chunk_{i}" for i in range(len(chunks))]
 
             vector_store.add_documents(
@@ -143,7 +209,6 @@ if uploaded_file:
 
         st.success(f"Document processed successfully ({len(chunks)} chunks stored).")
 
-
 # -----------------------------
 # Chat Interface
 # -----------------------------
@@ -151,23 +216,19 @@ st.markdown("## 💬 Ask a Question")
 
 query = st.chat_input("Ask something about the document...")
 
-
 if query:
 
-    # Show user message
     with st.chat_message("user"):
         st.write(query)
 
     # Retrieve relevant chunks
     results = vector_store.query(query)
 
-    documents = []
-
-    if results and "documents" in results and results["documents"]:
-        documents = results["documents"][0]
+    documents = results if results else []
 
     # Load conversation history
-    history = history_manager.load_history()
+    chat_id = st.session_state.chat_id
+    history = history_manager.load_history(chat_id)
 
     # Generate answer
     if not documents:
@@ -180,11 +241,9 @@ if query:
         st.write(answer)
 
     # Save conversation
-    history_manager.save_interaction(query, answer)
+    history_manager.save_interaction(chat_id, query, answer)
 
-    # -----------------------------
-    # Retrieved context visualization
-    # -----------------------------
+    # Retrieved context
     with st.expander("🔎 Retrieved Context"):
 
         for i, doc in enumerate(documents):
@@ -199,7 +258,8 @@ if query:
 st.markdown("---")
 st.markdown("### 🧠 Conversation History")
 
-history = history_manager.load_history()
+chat_id = st.session_state.chat_id
+history = history_manager.load_history(chat_id)
 
 for turn in reversed(history):
 

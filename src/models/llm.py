@@ -23,32 +23,35 @@ class LLM:
 
         context_text = "\n\n".join(context)
 
-        history_text = ""
+        messages = []
+
+        # system prompt from config.yaml
+        messages.append({
+            "role": "system",
+            "content": self.system_prompt
+        })
+
+        # conversation history
         if history:
-            for turn in history[-5:]:   # keep last 5 interactions
-                history_text += f"User: {turn['question']}\n"
-                history_text += f"Assistant: {turn['answer']}\n"
+            for turn in history[-5:]:
+                messages.append({"role": "user", "content": turn["question"]})
+                messages.append({"role": "assistant", "content": turn["answer"]})
 
-        prompt = f"""
-    {self.system_prompt}
+        # user query with context ONLY (no extra rules here)
+        messages.append({
+            "role": "user",
+            "content": f"""
+Context:
+{context_text}
 
-    Conversation history:
-    {history_text}
-
-    Context:
-    {context_text}
-
-    Question:
-    {question}
-
-    Answer:
-    """
+Question:
+{question}
+"""
+        })
 
         response = ollama.chat(
             model=self.model_name,
-            messages=[
-                {"role": "user", "content": prompt}
-            ]
+            messages=messages
         )
 
         return response["message"]["content"]

@@ -68,6 +68,7 @@ class DocumentLoader:
 
         text = []
         for paragraph in document.paragraphs:
-            text.append(paragraph.text)
+            if paragraph.text.strip():
+                text.append(paragraph.text)
 
         return "\n".join(text)
