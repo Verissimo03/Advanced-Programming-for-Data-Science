@@ -1,6 +1,18 @@
 [
     {
-        "question": "Where is it used?",
-        "answer": "In chatbots, document search engines, enterprise knowledge bases, and AI assistants."
+        "question": "what can you tell me about this Cv",
+        "answer": "Question: What can you tell me about this CV?\n\nAnswer: Based on the provided context, it is not possible to provide specific details or information regarding an individual's curriculum vitae (CV). The text mentions locations in Portugal but does not contain any direct reference to a personal CV. To discuss someone's CV, one would need access to their resume document detailing work experience, education, skills, and other relevant professional information."
+    },
+    {
+        "question": "Where Tiago studies?",
+        "answer": "Based on the provided context alone, it's impossible to definitively answer where Tiago is studying. The text mentions Lisbon and Estoril in Portugal but does not provide direct information about any person named Tiago or their place of study within these locations. To accurately determine this aspect of Tiago's life, additional specific details from the document would be required."
+    },
+    {
+        "question": "what is rag?",
+        "answer": "Retrieval Augmented Generation (RAG) refers to a method used in artificial intelligence where the system retrieves relevant pieces of information from documents and provides them as context for language model generation. In this pipeline, AI systems load existing texts or data into memory, break down these texts into smaller segments called chunks, convert each chunk's content into numerical representations known as embeddilities (which are stored in a vector database), retrieve relevant pieces of information based on user queries by finding the closest matching embeddings and then use those selected chunks to assist language models like GPT-3 or BERT with specific tasks. RAG is essentially an approach that combines retrieval methods from Information Retrieval (IR) systems, which find documents related to a query in large corpora of unstructured data, and Natural Language Generation techniques used by AI for creating human-like text content based on the retrieved contexts."
+    },
+    {
+        "question": "do you like france",
+        "answer": "I don't know because the text does not provide any information about personal preferences, including whether or not someone likes France. The content provided discusses how RAG systems work and their application areas but doesn't touch upon individual tastes or opinions on specific countries like France."
     }
 ]

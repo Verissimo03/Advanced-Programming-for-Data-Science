@@ -12,7 +12,7 @@ class TextChunker:
     Splits text into overlapping chunks.
     """
 
-    def __init__(self, chunk_size: int = 120, chunk_overlap: int = 20):
+    def __init__(self, chunk_size: int = 150, chunk_overlap: int = 20):
         self.splitter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap

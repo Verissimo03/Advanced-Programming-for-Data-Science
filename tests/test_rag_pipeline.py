@@ -26,7 +26,7 @@ from src.memory.conversation_history import ConversationHistory
 # The DocumentLoader reads the file from disk
 # and returns the full text content.
 loader = DocumentLoader()
-text = loader.load("data/raw/test.txt")
+text = loader.load("data/raw/test.pdf")
 
 print("Document loaded:")
 print(text)

@@ -27,17 +27,21 @@ class VectorStore:
             Name of the embedding model used for generating embeddings.
         """
 
-        # Create embedding function using Ollama
+        self.persist_directory = persist_directory
+
+        # Embedding function
         self.embedding_function = embedding_functions.OllamaEmbeddingFunction(
             model_name=embedding_model
         )
 
-        # Initialize persistent ChromaDB client
+        # Client
         self.client = chromadb.PersistentClient(path=persist_directory)
 
-        # Create or load collection
+        # Collection
+        self.collection_name = "documents"
+
         self.collection = self.client.get_or_create_collection(
-            name="documents",
+            name=self.collection_name,
             embedding_function=self.embedding_function
         )
 
@@ -83,3 +87,4 @@ class VectorStore:
         )
 
         return results
+    
